@@ -27,22 +27,22 @@ Este proyecto es un framework extensible y automatizado diseñado para evaluar l
 -   Opcional: Clave de API de OpenAI o Google si se prefiere para la generación de datasets o el juez de Ragas.
 
 ### 2. Estructura del Proyecto
-
+```
 rag_sandbox_evaluation/
-├── main.py # Punto de entrada principal para la evaluación
-├── requirements.txt # Dependencias del framework de evaluación
-├── .env # Variables de entorno (HF_TOKEN, ELASTIC_API_KEY, etc.)
-├── src/
-│ ├── init.py
-│ ├── components.py # Carga de LLMs y Embeddings (juez Ragas)
-│ ├── rag_interface.py # Definición de la interfaz RAGSystem y RAGResult
-│ ├── my_custom_rag.py # Adaptador para el RAG externo a evaluar
-│ ├── evaluation.py # Lógica de ejecución de Ragas
-│ ├── dashboard_rag.py # Generación del dashboard HTML
-│ └── dataset_generator.py # Generación/carga del dataset de evaluación
-├── output/ # Salidas del dashboard y dataset
-└── .venv/ # Entorno virtual de Python
-
+├── main.py .................................. # Punto de entrada principal para la evaluación
+├── requirements.txt ......................... # Dependencias del framework de evaluación
+├── .env ..................................... # Variables de entorno (HF_TOKEN, ELASTIC_API_KEY, etc.)
+├── dataset_generator.py ..................... # Generación/carga del dataset de evaluación
+├── .venv/ ................................... # Entorno virtual de Python
+├── output/ .................................. # Salidas del dashboard y dataset
+└── src/
+    ├── __init__.py
+    ├── components.py ........................ # Carga de LLMs y Embeddings (juez Ragas)
+    ├── rag_interface.py ..................... # Definición de la interfaz RAGSystem y RAGResult
+    ├── my_custom_rag.py ..................... # Adaptador para el RAG externo a evaluar
+    ├── evaluation.py ........................ # Lógica de ejecución de Ragas
+    └── dashboard_rag.py ..................... # Generación del dashboard HTML
+```
 ### 3. Configuración
 
 #### a. Configurar tu RAG Externo
