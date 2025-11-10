@@ -1,0 +1,1375 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Evaluación Comparativa de Sistemas RAG (Temporal y por Categoría)</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+        <style>
+            body { font-family: 'Roboto', sans-serif; margin: 20px; background-color: #fcfbf8; color: #36454F; } /* Fondo crema, texto gris-marrón */
+            h1 { font-size: 32pt; text-align: center; color: #5c4033; margin-bottom: 30px; border-bottom: 2px solid #a17a6a; padding-bottom: 15px; } /* Marrón oscuro para título, línea marrón */
+            h2 { font-size: 24pt; color: #7e6357; margin-top: 40px; border-bottom: 1px solid #dcdcdc; padding-bottom: 10px; } /* Marrón medio para subtítulos */
+            h3 { font-size: 18pt; color: #7e6357; margin-top: 30px; } /* Marrón medio para títulos de sección */
+            .section { background-color: #f5f2ed; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 20px; margin-bottom: 25px; } /* Fondo de sección más claro */
+            .kpi-container { display: flex; justify-content: space-around; flex-wrap: wrap; margin-bottom: 20px; }
+            .kpi-box { background-color: #e8e2d7; border-radius: 5px; padding: 15px 20px; margin: 10px; text-align: center; flex: 1; min-width: 200px; max-width: 28%; box-shadow: inset 0 0 5px rgba(0,0,0,.05); } /* Fondo KPI caja tono arena */
+            .kpi-label { font-size: 14pt; color: #696969; margin-bottom: 5px; } /* Gris medio para etiquetas KPI */
+            .kpi-value { font-size: 24pt; font-weight: 700; color: #a0522d; } /* Sienna para valores KPI */
+            .metric-description { font-size: 12pt; line-height: 1.6; color: #696969; margin-bottom: 10px; }
+            .interactive-tip { background-color: #e0efe0; border-left: 5px solid #6b8e23; padding: 15px; margin: 20px 0; font-size: 13pt; color: #36454F; } /* Verde oliva sutil para el tip */
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #d3d3d3; padding: 8px; text-align: left; vertical-align: top; } /* Bordes de tabla más suaves */
+            th { background-color: #e8e2d7; font-weight: bold; color: #5c4033; } /* Cabeceras de tabla tono arena, texto marrón */
+            .dataframe-table { font-size: 11pt; }
+            details { margin-top: 20px; background-color: #f5f2ed; border: 1px solid #d3d3d3; border-radius: 5px; padding: 10px; } /* Detalles con fondo de sección */
+            summary { font-weight: bold; cursor: pointer; color: #7e6357; font-size: 16pt; } /* Título detalles marrón medio */
+            details p { margin: 5px 0 5px 20px; }
+            /* Estilo para layout compacto de gráficos */
+            .charts-grid { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; }
+            .charts-grid > div { flex: 1 1 45%; min-width: 400px; }
+
+            /* Nuevos estilos para layout compacto de resúmenes de modelo */
+            .model-summaries-grid { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; margin-top: 20px; }
+            .model-summary-card {
+                flex: 1 1 30%;
+                min-width: 300px;
+                background-color: #edeae3; /* Fondo tarjeta modelo ligeramente más claro */
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 1px 3px rgba(0,0,0,.08);
+                text-align: center;
+            }
+            .model-summary-card h3 { margin-top: 0; margin-bottom: 15px; color: #5c4033; font-size: 20pt; } /* Marrón oscuro para título tarjeta */
+            .model-summary-card .kpi-container { flex-wrap: wrap; justify-content: center; gap: 5px; margin-bottom: 0; }
+            .model-summary-card .kpi-box {
+                margin: 5px;
+                padding: 10px 15px;
+                flex: 1 1 auto;
+                min-width: 120px;
+                max-width: 45%;
+                font-size: 10pt;
+            }
+            .model-summary-card .kpi-label { font-size: 10pt; color: #696969; }
+            .model-summary-card .kpi-value { font-size: 18pt; color: #a0522d; }
+        </style>
+    </head>
+    <body>
+        <h1>Evaluación Comparativa de Sistemas RAG (Temporal y por Categoría)</h1>
+        <p style="text-align: center; font-size: 16pt; color: #555; margin-bottom: 30px;">
+            Este dashboard ofrece una visión integral de la evaluación comparativa de diferentes
+            <strong>sistemas RAG (Retrieval Augmented Generation)</strong>. Nuestro objetivo es ayudarte a
+            entender el rendimiento de cada modelo en métricas clave de calidad y eficiencia,
+            facilitando la identificación de fortalezas, debilidades y oportunidades de mejora.
+            Los "Modelos" comparados representan distintas configuraciones o versiones de tu pipeline RAG.
+            Actualmente, <strong>Modelo_C_Experimental</strong> muestra la mayor fidelidad promedio (0.85).
+            <br>
+            Este informe incluye análisis de evolución temporal y segmentación por categoría de pregunta para un diagnóstico más profundo.
+        </p>
+        <div class="interactive-tip">
+            <strong>Consejo:</strong> Las gráficas son interactivas. Pase el ratón sobre los elementos para ver detalles, haga clic en la leyenda para ocultar/mostrar series, y use las herramientas de zoom/pan en la parte superior derecha de cada gráfica para explorar los datos.
+        </div>
+    
+        <div class="section">
+            <details>
+                <summary>Glosario de Métricas de Evaluación RAG</summary>
+                <div style="padding: 10px 0;">
+                    <p class="metric-description">
+                        Aquí se detallan las métricas clave utilizadas para evaluar el rendimiento de los modelos RAG.
+                        Comprender cada métrica es fundamental para interpretar correctamente los resultados y tomar decisiones informadas.
+                    </p>
+        <p><strong>Faithfulness:</strong> Mide la precisión y la consistencia de la respuesta del modelo **RAG** con respecto a la información proporcionada en los documentos fuente. Una puntuación alta indica que la respuesta no contiene alucinaciones y se basa directamente en el contexto recuperado.</p><p><strong>Answer Relevancy:</strong> Evalúa qué tan directa y completamente responde la respuesta generada por el **modelo RAG** a la pregunta del usuario. Ignora la veracidad de la respuesta.</p><p><strong>Context Precision:</strong> Indica qué tan relevante es el contexto recuperado para responder a la pregunta. Una puntuación alta significa que los pasajes recuperados son directamente útiles.</p><p><strong>Context Recall:</strong> Mide la exhaustividad del contexto recuperado, es decir, si todos los hechos necesarios para responder la pregunta están presentes en el contexto.</p><p><strong>Latency:</strong> Tiempo en segundos que tarda el modelo **RAG** en generar una respuesta.</p><p><strong>Answer Tokens:</strong> Número de tokens en la respuesta generada por el **modelo RAG**.</p><p><strong>Simulated Satisfaction:</strong> Métrica binaria (0/1) que indica la satisfacción simulada del usuario con la respuesta del **modelo RAG**. Puede representar una evaluación humana simplificada.</p>
+                </div>
+            </details>
+        </div>
+        
+    <h2>Rendimiento Global por Modelo</h2>
+    <p class="metric-description">
+        Esta sección presenta un resumen de las métricas promedio para cada modelo RAG evaluado.
+        Estos indicadores clave de rendimiento (KPIs) permiten una visión rápida de alto nivel
+        sobre el desempeño general de cada implementación y facilitan la comparación inicial.
+    </p>
+    <div class="section">
+        <div class="model-summaries-grid">
+    
+            <div class="model-summary-card">
+                <h3>Modelo_A</h3>
+                <div class="kpi-container">
+                    <div class="kpi-box"><div class="kpi-label">Faithfulness</div><div class="kpi-value">0.84</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Answer Relevancy</div><div class="kpi-value">0.85</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Context Precision</div><div class="kpi-value">0.85</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Context Recall</div><div class="kpi-value">0.86</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Latencia (s)</div><div class="kpi-value">1.00</div></div>
+                </div>
+            </div>
+            
+            <div class="model-summary-card">
+                <h3>Modelo_B</h3>
+                <div class="kpi-container">
+                    <div class="kpi-box"><div class="kpi-label">Faithfulness</div><div class="kpi-value">0.79</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Answer Relevancy</div><div class="kpi-value">0.83</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Context Precision</div><div class="kpi-value">0.81</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Context Recall</div><div class="kpi-value">0.82</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Latencia (s)</div><div class="kpi-value">1.27</div></div>
+                </div>
+            </div>
+            
+            <div class="model-summary-card">
+                <h3>Modelo_C_Experimental</h3>
+                <div class="kpi-container">
+                    <div class="kpi-box"><div class="kpi-label">Faithfulness</div><div class="kpi-value">0.85</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Answer Relevancy</div><div class="kpi-value">0.79</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Context Precision</div><div class="kpi-value">0.80</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Context Recall</div><div class="kpi-value">0.81</div></div>
+                    <div class="kpi-box"><div class="kpi-label">Latencia (s)</div><div class="kpi-value">0.92</div></div>
+                </div>
+            </div>
+            </div></div>
+    <h2>Comparación de Métricas RAG entre Modelos</h2>
+    <div class="section">
+        <p class="metric-description">
+            Este gráfico de barras agrupa las puntuaciones promedio de las métricas de calidad RAG
+            (Fidelidad, Relevancia de Respuesta, Precisión y Exhaustividad de Contexto)
+            para cada modelo. Permite una comparación visual directa entre los modelos
+            para identificar sus fortalezas relativas en los aspectos clave de la generación RAG.
+        </p>
+    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="b239e8ac-641d-4370-80b3-7a1800ab4c55" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("b239e8ac-641d-4370-80b3-7a1800ab4c55")) {                    Plotly.newPlot(                        "b239e8ac-641d-4370-80b3-7a1800ab4c55",                        [{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_A\u003cbr\u003eMétrica=%{x}\u003cbr\u003ePuntuación Promedio=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_A","marker":{"color":"#8B4513","pattern":{"shape":""}},"name":"Modelo_A","offsetgroup":"Modelo_A","orientation":"v","showlegend":true,"textposition":"auto","x":["faithfulness","answer_relevancy","context_precision","context_recall"],"xaxis":"x","y":{"dtype":"f8","bdata":"tPAJl\u002fjv6j8Tw9fqExPrPwtxbquFM+s\u002f76\u002fE6xxu6z8="},"yaxis":"y","type":"bar"},{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_B\u003cbr\u003eMétrica=%{x}\u003cbr\u003ePuntuación Promedio=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_B","marker":{"color":"#A0522D","pattern":{"shape":""}},"name":"Modelo_B","offsetgroup":"Modelo_B","orientation":"v","showlegend":true,"textposition":"auto","x":["faithfulness","answer_relevancy","context_precision","context_recall"],"xaxis":"x","y":{"dtype":"f8","bdata":"PXnwLUJQ6T8JnRKOGIDqP2d6wAnmEOo\u002f3NkIiwcg6j8="},"yaxis":"y","type":"bar"},{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_C_Experimental\u003cbr\u003eMétrica=%{x}\u003cbr\u003ePuntuación Promedio=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_C_Experimental","marker":{"color":"#6B8E23","pattern":{"shape":""}},"name":"Modelo_C_Experimental","offsetgroup":"Modelo_C_Experimental","orientation":"v","showlegend":true,"textposition":"auto","x":["faithfulness","answer_relevancy","context_precision","context_recall"],"xaxis":"x","y":{"dtype":"f8","bdata":"bPuEMwom6z+n3qjS\u002fWLpP6S1D9+Jk+k\u002fIV4R19Pv6T8="},"yaxis":"y","type":"bar"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Métrica","font":{"size":16}}},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Puntuación Promedio","font":{"size":16}},"range":[0,1]},"legend":{"title":{"text":"Modelo"},"tracegroupgap":0},"title":{"text":"Puntuación Promedio de Métricas RAG por Modelo","font":{"size":20}},"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div></div>
+    <h2>Análisis de Métricas Operacionales</h2>
+    <div class="section">
+        <p class="metric-description">
+            Esta sección visualiza las métricas relacionadas con la eficiencia operativa de los modelos RAG,
+            como la latencia (tiempo de respuesta) y el número de tokens generados en promedio.
+            El gráfico de dispersión ayuda a explorar la relación entre la latencia y la fidelidad
+            de la respuesta para cada pregunta, lo cual es crucial para entender los compromisos
+            entre rendimiento y calidad.
+        </p>
+        <div class="charts-grid">
+    <div><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="ea4ad7c4-34ac-4032-b244-3407a46f842e" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("ea4ad7c4-34ac-4032-b244-3407a46f842e")) {                    Plotly.newPlot(                        "ea4ad7c4-34ac-4032-b244-3407a46f842e",                        [{"hovertemplate":"model_name=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_A","marker":{"color":"#8B4513","pattern":{"shape":""}},"name":"Modelo_A","orientation":"v","showlegend":true,"textposition":"auto","x":["Modelo_A"],"xaxis":"x","y":{"dtype":"f8","bdata":"K8PF9OPt7z8="},"yaxis":"y","type":"bar"},{"hovertemplate":"model_name=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_B","marker":{"color":"#A0522D","pattern":{"shape":""}},"name":"Modelo_B","orientation":"v","showlegend":true,"textposition":"auto","x":["Modelo_B"],"xaxis":"x","y":{"dtype":"f8","bdata":"p58TxLND9D8="},"yaxis":"y","type":"bar"},{"hovertemplate":"model_name=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_C_Experimental","marker":{"color":"#6B8E23","pattern":{"shape":""}},"name":"Modelo_C_Experimental","orientation":"v","showlegend":true,"textposition":"auto","x":["Modelo_C_Experimental"],"xaxis":"x","y":{"dtype":"f8","bdata":"czGbT9tK7T8="},"yaxis":"y","type":"bar"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Modelo"},"categoryorder":"array","categoryarray":["Modelo_A","Modelo_B","Modelo_C_Experimental"]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Latencia (s)"}},"legend":{"title":{"text":"model_name"},"tracegroupgap":0},"title":{"text":"Latencia Promedio por Modelo (s)","font":{"size":20}},"barmode":"relative"},                        {"responsive": true}                    )                };            </script>        </div></div><div><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="fde954cb-b321-4bf9-afaa-0afaf7b054aa" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("fde954cb-b321-4bf9-afaa-0afaf7b054aa")) {                    Plotly.newPlot(                        "fde954cb-b321-4bf9-afaa-0afaf7b054aa",                        [{"hovertemplate":"model_name=%{x}\u003cbr\u003eanswer_tokens=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_A","marker":{"color":"#8B4513","pattern":{"shape":""}},"name":"Modelo_A","orientation":"v","showlegend":true,"textposition":"auto","x":["Modelo_A"],"xaxis":"x","y":{"dtype":"f8","bdata":"AAAAAACATkA="},"yaxis":"y","type":"bar"},{"hovertemplate":"model_name=%{x}\u003cbr\u003eanswer_tokens=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_B","marker":{"color":"#A0522D","pattern":{"shape":""}},"name":"Modelo_B","orientation":"v","showlegend":true,"textposition":"auto","x":["Modelo_B"],"xaxis":"x","y":{"dtype":"f8","bdata":"q6qqqqqSUkA="},"yaxis":"y","type":"bar"},{"hovertemplate":"model_name=%{x}\u003cbr\u003eanswer_tokens=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_C_Experimental","marker":{"color":"#6B8E23","pattern":{"shape":""}},"name":"Modelo_C_Experimental","orientation":"v","showlegend":true,"textposition":"auto","x":["Modelo_C_Experimental"],"xaxis":"x","y":{"dtype":"f8","bdata":"q6qqqqraTkA="},"yaxis":"y","type":"bar"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Modelo"},"categoryorder":"array","categoryarray":["Modelo_A","Modelo_B","Modelo_C_Experimental"]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Tokens"}},"legend":{"title":{"text":"model_name"},"tracegroupgap":0},"title":{"text":"Promedio de Tokens por Respuesta","font":{"size":20}},"barmode":"relative"},                        {"responsive": true}                    )                };            </script>        </div></div><div style='flex: 1 1 95%;'><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="18800a31-eb01-4bf3-9791-20a0624f799c" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("18800a31-eb01-4bf3-9791-20a0624f799c")) {                    Plotly.newPlot(                        "18800a31-eb01-4bf3-9791-20a0624f799c",                        [{"customdata":[["Respuesta simulada de Modelo_A para '¿Quién creó Python?' en 2025-08-01.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.8842719017277253,0.8333038935154129,0.8680534932758457],["Respuesta simulada de Modelo_A para '¿Qué necesita una planta para la fotosíntesis?' en 2025-08-01.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.8426808141603648,0.8986807821321307,0.8651819286499459],["Respuesta simulada de Modelo_A para '¿Qué es un Sprint en Agile?' en 2025-08-01.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.8038890855873528,0.8180311444587625,0.8814873894333601],["Respuesta simulada de Modelo_A para '¿Qué es un LLM?' en 2025-08-01.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.8125992290478653,0.8896602173398193,0.8268965057018041],["Respuesta simulada de Modelo_A para '¿Cuál es la capital de Francia?' en 2025-08-01.","La capital de Francia es París.",["La capital de Francia es París."],0.8066100326378456,0.8746080826215595,0.8386595089691229],["Respuesta simulada de Modelo_A para '¿Quién escribió 'Cien años de soledad'?' en 2025-08-01.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.8949874652472307,0.8718389348661314,0.817386461421112],["Respuesta simulada de Modelo_A para '¿Qué base de datos vectorial es escalable?' en 2025-08-01.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.842401111643672,0.8975632785032723,0.8737780150033094],["Respuesta simulada de Modelo_A para '¿Es Python un lenguaje compilado?' en 2025-08-01.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.8148719848511944,0.8276166870527357,0.8965609930965031],["Respuesta simulada de Modelo_A para '¿Quién creó Python?' en 2025-09-01.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.8991697128707649,0.8323245249746511,0.8395083213268113],["Respuesta simulada de Modelo_A para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-01.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.8028945777265928,0.8345637479153076,0.8087575562122776],["Respuesta simulada de Modelo_A para '¿Qué es un Sprint en Agile?' en 2025-09-01.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.8407256900422736,0.847853949437015,0.8940437738321617],["Respuesta simulada de Modelo_A para '¿Qué es un LLM?' en 2025-09-01.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.8779791539826036,0.838648712501094,0.8750615058467355],["Respuesta simulada de Modelo_A para '¿Cuál es la capital de Francia?' en 2025-09-01.","La capital de Francia es París.",["La capital de Francia es París."],0.8044017590415085,0.8139867666524272,0.8807873899778362],["Respuesta simulada de Modelo_A para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-01.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.8807486310530956,0.8220520705814918,0.8823971162188846],["Respuesta simulada de Modelo_A para '¿Qué base de datos vectorial es escalable?' en 2025-09-01.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.8605257156031583,0.8647943189552014,0.807609446716877],["Respuesta simulada de Modelo_A para '¿Es Python un lenguaje compilado?' en 2025-09-01.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.8550696665993619,0.815952221944392,0.809530385925917],["Respuesta simulada de Modelo_A para '¿Quién creó Python?' en 2025-09-20.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.8611774608220444,0.8274026430371485,0.8871162944199303],["Respuesta simulada de Modelo_A para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-20.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.8527099005853452,0.8498390095856169,0.8201028770322386],["Respuesta simulada de Modelo_A para '¿Qué es un Sprint en Agile?' en 2025-09-20.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.8454426177070672,0.8596282441520736,0.889276092949548],["Respuesta simulada de Modelo_A para '¿Qué es un LLM?' en 2025-09-20.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.8164923251768721,0.8049713707306686,0.8704390249642023],["Respuesta simulada de Modelo_A para '¿Cuál es la capital de Francia?' en 2025-09-20.","La capital de Francia es París.",["La capital de Francia es París."],0.8075753743061993,0.8025441420161409,0.8123940097847464],["Respuesta simulada de Modelo_A para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-20.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.8738273380332445,0.887401715146241,0.8502601098626841],["Respuesta simulada de Modelo_A para '¿Qué base de datos vectorial es escalable?' en 2025-09-20.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.890679519012671,0.8984559573915879,0.8798116158198142],["Respuesta simulada de Modelo_A para '¿Es Python un lenguaje compilado?' en 2025-09-20.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.8341609310702498,0.8892213747794304,0.8974967827933993]],"hovertemplate":"\u003cb\u003e%{hovertext}\u003c\u002fb\u003e\u003cbr\u003e\u003cbr\u003emodel_name=Modelo_A\u003cbr\u003eLatencia (s)=%{x}\u003cbr\u003eFaithfulness=%{y}\u003cbr\u003eanswer=%{customdata[0]}\u003cbr\u003eground_truth=%{customdata[1]}\u003cbr\u003econtexts=%{customdata[2]}\u003cbr\u003eanswer_relevancy=%{customdata[3]}\u003cbr\u003econtext_precision=%{customdata[4]}\u003cbr\u003econtext_recall=%{customdata[5]}\u003cextra\u003e\u003c\u002fextra\u003e","hovertext":["¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?","¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?","¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?"],"legendgroup":"Modelo_A","marker":{"color":"#8B4513","symbol":"circle"},"mode":"markers","name":"Modelo_A","orientation":"v","showlegend":true,"x":{"dtype":"f8","bdata":"7YGizH8L8j+3WumlcKvwP63r+n7uouk\u002fsHN1DKS36z9T\u002fNC91KTwP4g\u002f1XkkavA\u002fOrHHtDup8T\u002fw6F3I8DTqP7Dx7Y06cfA\u002fUqLpLy9O8j\u002fRDbV8rkrwP64SX4vqLe4\u002fZyOfBaSc8j+Yi4aMwUbsP\u002fFuVxf4xvE\u002ftqaHI4a17T+WgNoDNLPwP0oIIAmrle0\u002fCcodjEaP8T\u002f6Kid1gujqP+aIn\u002fzHQOw\u002freBC48Up7D+orllNd\u002fvwP8yZw26ruvI\u002f"},"xaxis":"x","y":{"dtype":"f8","bdata":"ZPsjz6Gb6z8zrW1ZSxvrP1KM2o7myeo\u002ft8nWH76\u002f6T+R6GO\u002fvt7rPxnlJItXTuw\u002fsuzE0ozE6z9f04tO6WvrP9BPDR5bees\u002fPt2522KJ6j+S2mcN+iTrP3eSKCV48Ok\u002f22uMaroO6j94v1JzzvnpP2ieCiU2e+o\u002flmL2tcVe6z9BSUUlws3pPxgg7y6Irew\u002f+dRg+BRV6j8bJnjbbvXqP9jDfDGJ7+o\u002fF3kgxpiS6j+9V9eR8ZzqP\u002f1EGE+ZAes\u002f"},"yaxis":"y","type":"scatter"},{"customdata":[["Respuesta simulada de Modelo_B para '¿Quién creó Python?' en 2025-08-01.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.8266954323583067,0.7796012343259996,0.7711635801378475],["Respuesta simulada de Modelo_B para '¿Qué necesita una planta para la fotosíntesis?' en 2025-08-01.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.8026405273468249,0.8169605878087198,0.7818932926341746],["Respuesta simulada de Modelo_B para '¿Qué es un Sprint en Agile?' en 2025-08-01.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.797526596773511,0.8087684463070711,0.7929888041566657],["Respuesta simulada de Modelo_B para '¿Qué es un LLM?' en 2025-08-01.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.7860887329622714,0.8125366367573721,0.7876827869513586],["Respuesta simulada de Modelo_B para '¿Cuál es la capital de Francia?' en 2025-08-01.","La capital de Francia es París.",["La capital de Francia es París."],0.7958400557446782,0.7939436761129508,0.8185735329515342],["Respuesta simulada de Modelo_B para '¿Quién escribió 'Cien años de soledad'?' en 2025-08-01.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.7781640321456504,0.8276224299620251,0.7926881785460403],["Respuesta simulada de Modelo_B para '¿Qué base de datos vectorial es escalable?' en 2025-08-01.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.8111134834163489,0.7959738838635734,0.8233565385272085],["Respuesta simulada de Modelo_B para '¿Es Python un lenguaje compilado?' en 2025-08-01.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.7867553935716283,0.7818570108179469,0.7909215162999466],["Respuesta simulada de Modelo_B para '¿Quién creó Python?' en 2025-09-01.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.8574472478581997,0.7998511039722357,0.8365381919665382],["Respuesta simulada de Modelo_B para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-01.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.8285231839691349,0.8099564987293779,0.8429960023068759],["Respuesta simulada de Modelo_B para '¿Qué es un Sprint en Agile?' en 2025-09-01.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.8523418826265008,0.8338789196252371,0.8144239964581302],["Respuesta simulada de Modelo_B para '¿Qué es un LLM?' en 2025-09-01.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.845992752294718,0.8029999521804003,0.8172380003606092],["Respuesta simulada de Modelo_B para '¿Cuál es la capital de Francia?' en 2025-09-01.","La capital de Francia es París.",["La capital de Francia es París."],0.8519009210028138,0.80586811063322,0.8327907066452864],["Respuesta simulada de Modelo_B para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-01.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.8032608602683611,0.7941947277542606,0.8256888931875065],["Respuesta simulada de Modelo_B para '¿Qué base de datos vectorial es escalable?' en 2025-09-01.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.823739098372426,0.8281213139979048,0.7948025217222107],["Respuesta simulada de Modelo_B para '¿Es Python un lenguaje compilado?' en 2025-09-01.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.8458420202178377,0.7974452799789666,0.7951319662492704],["Respuesta simulada de Modelo_B para '¿Quién creó Python?' en 2025-09-20.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.8355528744514088,0.8143618603488407,0.8418812108704636],["Respuesta simulada de Modelo_B para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-20.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.8307549231839835,0.8525316494687617,0.8492062364866922],["Respuesta simulada de Modelo_B para '¿Qué es un Sprint en Agile?' en 2025-09-20.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.8492278491656944,0.8529644060901079,0.8084565793292828],["Respuesta simulada de Modelo_B para '¿Qué es un LLM?' en 2025-09-20.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.8354198876828182,0.8076921376417996,0.8306973891759487],["Respuesta simulada de Modelo_B para '¿Cuál es la capital de Francia?' en 2025-09-20.","La capital de Francia es París.",["La capital de Francia es París."],0.8411506058678283,0.8176788309568122,0.8518721574647616],["Respuesta simulada de Modelo_B para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-20.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.8757201241783787,0.8411465067737938,0.8229629199968258],["Respuesta simulada de Modelo_B para '¿Qué base de datos vectorial es escalable?' en 2025-09-20.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.8444749919325479,0.8382539688777279,0.8203249674708073],["Respuesta simulada de Modelo_B para '¿Es Python un lenguaje compilado?' en 2025-09-20.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.8691075319562523,0.8352984040706322,0.849556354076399]],"hovertemplate":"\u003cb\u003e%{hovertext}\u003c\u002fb\u003e\u003cbr\u003e\u003cbr\u003emodel_name=Modelo_B\u003cbr\u003eLatencia (s)=%{x}\u003cbr\u003eFaithfulness=%{y}\u003cbr\u003eanswer=%{customdata[0]}\u003cbr\u003eground_truth=%{customdata[1]}\u003cbr\u003econtexts=%{customdata[2]}\u003cbr\u003eanswer_relevancy=%{customdata[3]}\u003cbr\u003econtext_precision=%{customdata[4]}\u003cbr\u003econtext_recall=%{customdata[5]}\u003cextra\u003e\u003c\u002fextra\u003e","hovertext":["¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?","¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?","¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?"],"legendgroup":"Modelo_B","marker":{"color":"#A0522D","symbol":"circle"},"mode":"markers","name":"Modelo_B","orientation":"v","showlegend":true,"x":{"dtype":"f8","bdata":"Pqu02m2U9D8hjnVw1YrzP6BCXmZ+jvQ\u002f9j\u002fnPGQu9j+cNOXhulPzP\u002fiwU\u002fuQO\u002fY\u002fsYoxVm0j9j82e9d9u1T0PwklBYFKX\u002fU\u002fqK\u002fBAo4K9T\u002f+QstBDov0PzAjaIjjPvU\u002fFSIPi3A38z8Oulu\u002fSSP1P30fWIa3DPQ\u002f1TRmjmv38z8Hc6JY4qz0P5bihUO6evI\u002f0yqTXc0j9D+rnv6ZoKTyPzL9STB4T\u002fI\u002fo2NYJTUt8j\u002fGvHiNPTv0PzmoLJ6iOvQ\u002f"},"xaxis":"x","y":{"dtype":"f8","bdata":"hHSZuKZG6D9tHjkfW9TnP1Z7+Ux+Rug\u002fr0pIBkcO6D+zRLjnHJ3oP4BUUzFCE+c\u002fciMl1TSy5z+OcN\u002fbUIfoP2T88xWCLOk\u002fFkBG\u002ffyN6T8AXEoD3JfpP5+XqoCd\u002fug\u002fzePkjXuN6T9lLI6RFn3pP\u002fR9TV4MJOk\u002f6ukgGf7t6D8uYikzz4fqP0Ws2ZSbfuo\u002ft\u002fanjAxX6j\u002fLGkjI8nHrP3gj1rPOauo\u002f12ftMUZp6j\u002fl7W9B9svpP0qWL+d9T+s\u002f"},"yaxis":"y","type":"scatter"},{"customdata":[["Respuesta simulada de Modelo_C_Experimental para '¿Quién creó Python?' en 2025-08-01.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.6510515103667365,0.7249156526063216,0.8387813201988151],["Respuesta simulada de Modelo_C_Experimental para '¿Qué necesita una planta para la fotosíntesis?' en 2025-08-01.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.8485970642958811,0.6979616011973141,0.8371538083812634],["Respuesta simulada de Modelo_C_Experimental para '¿Qué es un Sprint en Agile?' en 2025-08-01.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.783642268700125,0.931931960584262,0.7181585840568228],["Respuesta simulada de Modelo_C_Experimental para '¿Qué es un LLM?' en 2025-08-01.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.8198251664423002,0.7697689884425551,0.6588587142178962],["Respuesta simulada de Modelo_C_Experimental para '¿Cuál es la capital de Francia?' en 2025-08-01.","La capital de Francia es París.",["La capital de Francia es París."],0.6918291801179518,0.662692091185964,0.7835991348850666],["Respuesta simulada de Modelo_C_Experimental para '¿Quién escribió 'Cien años de soledad'?' en 2025-08-01.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.8178075409442566,0.708807940581683,0.8986504292347678],["Respuesta simulada de Modelo_C_Experimental para '¿Qué base de datos vectorial es escalable?' en 2025-08-01.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.6983160887662638,0.6884098264855047,0.660219850443452],["Respuesta simulada de Modelo_C_Experimental para '¿Es Python un lenguaje compilado?' en 2025-08-01.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.9305580393871538,0.7686141366335356,0.9191201494761729],["Respuesta simulada de Modelo_C_Experimental para '¿Quién creó Python?' en 2025-09-01.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.8946918670144663,0.9369203360294562,0.9257640466913948],["Respuesta simulada de Modelo_C_Experimental para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-01.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.8830665585999056,0.8932553467503535,0.9284586552194404],["Respuesta simulada de Modelo_C_Experimental para '¿Qué es un Sprint en Agile?' en 2025-09-01.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.6639497346572638,0.6701097056004868,0.6783540609129295],["Respuesta simulada de Modelo_C_Experimental para '¿Qué es un LLM?' en 2025-09-01.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.8246100510608354,0.9205415057719886,0.7925499103244078],["Respuesta simulada de Modelo_C_Experimental para '¿Cuál es la capital de Francia?' en 2025-09-01.","La capital de Francia es París.",["La capital de Francia es París."],0.6841531414858126,0.8619074511126041,0.9426626261066823],["Respuesta simulada de Modelo_C_Experimental para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-01.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.8784769529180549,0.7297036298967434,0.7968909273865983],["Respuesta simulada de Modelo_C_Experimental para '¿Qué base de datos vectorial es escalable?' en 2025-09-01.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.8618375100000455,0.8785138837773924,0.7251269154247783],["Respuesta simulada de Modelo_C_Experimental para '¿Es Python un lenguaje compilado?' en 2025-09-01.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.9202847909741265,0.8065542946524441,0.7325752528540392],["Respuesta simulada de Modelo_C_Experimental para '¿Quién creó Python?' en 2025-09-20.","Python fue creado por Guido van Rossum en 1991.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991."],0.7549938090993579,0.8759172636780511,0.9545086223189592],["Respuesta simulada de Modelo_C_Experimental para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-20.","Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.",["La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento."],0.735934925504005,0.9506043451539011,0.9029652885388328],["Respuesta simulada de Modelo_C_Experimental para '¿Qué es un Sprint en Agile?' en 2025-09-20.","Un Sprint es una iteración corta en el desarrollo ágil de software.",["El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile."],0.7085386160248144,0.7769629991974539,0.804132559515888],["Respuesta simulada de Modelo_C_Experimental para '¿Qué es un LLM?' en 2025-09-20.","Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.",["Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano."],0.684047392778015,0.7968508365149111,0.803095691956136],["Respuesta simulada de Modelo_C_Experimental para '¿Cuál es la capital de Francia?' en 2025-09-20.","La capital de Francia es París.",["La capital de Francia es París."],0.8507637795550612,0.7122707831592217,0.8679453246400214],["Respuesta simulada de Modelo_C_Experimental para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-20.","Gabriel García Márquez fue el autor de 'Cien años de soledad'.",["'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez."],0.8593671119441355,0.892402049537247,0.7129932230656449],["Respuesta simulada de Modelo_C_Experimental para '¿Qué base de datos vectorial es escalable?' en 2025-09-20.","Milvus es una base de datos vectorial de código abierto altamente escalable.",["Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático."],0.8473717643689341,0.8587922713986519,0.8879141156689814],["Respuesta simulada de Modelo_C_Experimental para '¿Es Python un lenguaje compilado?' en 2025-09-20.","Python es un lenguaje interpretado.",["Python es un lenguaje de programación interpretado, de alto nivel y de propósito general."],0.7462992824391953,0.6678329747482099,0.6821404186319198]],"hovertemplate":"\u003cb\u003e%{hovertext}\u003c\u002fb\u003e\u003cbr\u003e\u003cbr\u003emodel_name=Modelo_C_Experimental\u003cbr\u003eLatencia (s)=%{x}\u003cbr\u003eFaithfulness=%{y}\u003cbr\u003eanswer=%{customdata[0]}\u003cbr\u003eground_truth=%{customdata[1]}\u003cbr\u003econtexts=%{customdata[2]}\u003cbr\u003eanswer_relevancy=%{customdata[3]}\u003cbr\u003econtext_precision=%{customdata[4]}\u003cbr\u003econtext_recall=%{customdata[5]}\u003cextra\u003e\u003c\u002fextra\u003e","hovertext":["¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?","¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?","¿Quién creó Python?","¿Qué necesita una planta para la fotosíntesis?","¿Qué es un Sprint en Agile?","¿Qué es un LLM?","¿Cuál es la capital de Francia?","¿Quién escribió 'Cien años de soledad'?","¿Qué base de datos vectorial es escalable?","¿Es Python un lenguaje compilado?"],"legendgroup":"Modelo_C_Experimental","marker":{"color":"#6B8E23","symbol":"circle"},"mode":"markers","name":"Modelo_C_Experimental","orientation":"v","showlegend":true,"x":{"dtype":"f8","bdata":"YjUS1I064z8DGemkLa\u002fvP07v4sOBM\u002fE\u002fBsISciGz8j+8lFOnU+bxP9sMC7mb0uE\u002fOseAc39p8D8hVwwMRNz1P\u002fb+FgYtB+Y\u002foSFe1k3s8T+njV8o4QLmP9i7xqvIOvc\u002fFf4vOOxN8T\u002fQdC8QzZvtP9LUaFpRquI\u002fTmwqoZmy4j\u002fQTQ9tcTL1P2n\u002fH3jkXuQ\u002fzXEBEndR7j+ybzWT917vP7aId+h8Uew\u002fPj1RWfSH5j9Li+q15gvtPzi3zexp3OE\u002f"},"xaxis":"x","y":{"dtype":"f8","bdata":"BSHP\u002foI17D+J31vOTIjqP9Yod7Qf3eY\u002fr\u002fbcBZsh7j+a0ikFyOLlP9huzFtai+s\u002f1Jd18jSd6j8OSvWgoejtP59vY+ST8eo\u002fsNE2tTpm7D9JeAIU7bboPwAFLI55hu4\u002fQOENUX\u002fI7D8FhoY+7iXpPxTPW3msOOY\u002fG5i0kfrP7D9B74UXSnruP437tSNk6us\u002fOBIi\u002fuGw5j9\u002fdjpPGHvsP7Ru3d\u002fRTOg\u002fzxpi9c\u002fr6j+vDryE88buP\u002fG1lZ\u002fpw+4\u002f"},"yaxis":"y","type":"scatter"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Latencia (s)"}},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Faithfulness"}},"legend":{"title":{"text":"model_name"},"tracegroupgap":0},"title":{"text":"Latencia vs. Fidelidad (Faithfulness) por Pregunta y Modelo","font":{"size":20}}},                        {"responsive": true}                    )                };            </script>        </div></div></div></div>
+        <h2>Evolución Temporal del Rendimiento</h2>
+        <div class="section">
+            <p class="metric-description">
+                Esta sección permite observar cómo las métricas clave de los modelos RAG han evolucionado a lo largo del tiempo.
+                Es fundamental para monitorear mejoras, detectar regresiones o entender el impacto de las actualizaciones en el sistema.
+            </p>
+            <div class="charts-grid">
+        <div><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="b8cf10e7-c3d0-4c5b-a024-ba1d71e2c765" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("b8cf10e7-c3d0-4c5b-a024-ba1d71e2c765")) {                    Plotly.newPlot(                        "b8cf10e7-c3d0-4c5b-a024-ba1d71e2c765",                        [{"hovertemplate":"model_name=Modelo_A\u003cbr\u003etimestamp=%{x}\u003cbr\u003efaithfulness=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_A","line":{"color":"#8B4513","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_A","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"i5FjyMNT6z\u002fN+KacVp\u002fqP8NHE2DP3Oo\u002f"},"yaxis":"y","type":"scatter"},{"hovertemplate":"model_name=Modelo_B\u003cbr\u003etimestamp=%{x}\u003cbr\u003efaithfulness=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_B","line":{"color":"#A0522D","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_B","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"xZCkfjUL6D8FFcKlsk3pP+7FamXel+o\u002f"},"yaxis":"y","type":"scatter"},{"hovertemplate":"model_name=Modelo_C_Experimental\u003cbr\u003etimestamp=%{x}\u003cbr\u003efaithfulness=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_C_Experimental","line":{"color":"#6B8E23","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_C_Experimental","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"bQh8bxC26j+isc06ifHqPzU4RfCEyus\u002f"},"yaxis":"y","type":"scatter"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Fecha de Evaluación"}},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Faithfulness Promedio"}},"legend":{"title":{"text":"model_name"},"tracegroupgap":0},"title":{"text":"Evolución de Faithfulness Promedio","font":{"size":20}}},                        {"responsive": true}                    )                };            </script>        </div></div><div><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="b5b5fe37-ba96-4732-925b-823e0dce2f27" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("b5b5fe37-ba96-4732-925b-823e0dce2f27")) {                    Plotly.newPlot(                        "b5b5fe37-ba96-4732-925b-823e0dce2f27",                        [{"hovertemplate":"model_name=Modelo_A\u003cbr\u003etimestamp=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_A","line":{"color":"#8B4513","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_A","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"eDs4wrlN7z\u002fVOqeuWXDwP2CYyr4+m+8\u002f"},"yaxis":"y","type":"scatter"},{"hovertemplate":"model_name=Modelo_B\u003cbr\u003etimestamp=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_B","line":{"color":"#A0522D","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_B","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"7jT2U3Pc9D9qbaT1VJL0P548oAJTXPM\u002f"},"yaxis":"y","type":"scatter"},{"hovertemplate":"model_name=Modelo_C_Experimental\u003cbr\u003etimestamp=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_C_Experimental","line":{"color":"#6B8E23","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_C_Experimental","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"g2R2fTmc7z81X9x1mX3sP6DQfvu+xus\u002f"},"yaxis":"y","type":"scatter"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Fecha de Evaluación"}},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Latencia Promedio (s)"}},"legend":{"title":{"text":"model_name"},"tracegroupgap":0},"title":{"text":"Evolución de Latencia Promedio (s)","font":{"size":20}}},                        {"responsive": true}                    )                };            </script>        </div></div><div><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="9306e289-6ec9-458b-8568-6cb0e6cab01c" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("9306e289-6ec9-458b-8568-6cb0e6cab01c")) {                    Plotly.newPlot(                        "9306e289-6ec9-458b-8568-6cb0e6cab01c",                        [{"hovertemplate":"model_name=Modelo_A\u003cbr\u003etimestamp=%{x}\u003cbr\u003esimulated_satisfaction=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_A","line":{"color":"#8B4513","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_A","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"AAAAAAAA8D8AAAAAAADwPwAAAAAAAPA\u002f"},"yaxis":"y","type":"scatter"},{"hovertemplate":"model_name=Modelo_B\u003cbr\u003etimestamp=%{x}\u003cbr\u003esimulated_satisfaction=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_B","line":{"color":"#A0522D","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_B","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"AAAAAAAA5D8AAAAAAADwPwAAAAAAAPA\u002f"},"yaxis":"y","type":"scatter"},{"hovertemplate":"model_name=Modelo_C_Experimental\u003cbr\u003etimestamp=%{x}\u003cbr\u003esimulated_satisfaction=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_C_Experimental","line":{"color":"#6B8E23","dash":"solid"},"marker":{"symbol":"circle"},"mode":"lines+markers","name":"Modelo_C_Experimental","orientation":"v","showlegend":true,"x":["2025-08-01T00:00:00","2025-09-01T00:00:00","2025-09-20T00:00:00"],"xaxis":"x","y":{"dtype":"f8","bdata":"AAAAAAAA4D8AAAAAAADkPwAAAAAAAOA\u002f"},"yaxis":"y","type":"scatter"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Fecha de Evaluación"}},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Satisfacción Promedio"}},"legend":{"title":{"text":"model_name"},"tracegroupgap":0},"title":{"text":"Evolución de Satisfacción Promedio","font":{"size":20}}},                        {"responsive": true}                    )                };            </script>        </div></div></div></div>
+        <h2>Rendimiento por Categoría de Pregunta</h2>
+        <div class="section">
+            <p class="metric-description">
+                Este análisis desglosa el rendimiento de los modelos RAG por diferentes categorías de preguntas.
+                Es crucial para identificar en qué tipos de preguntas cada modelo sobresale o, por el contrario,
+                presenta debilidades, permitiendo optimizaciones más dirigidas a casos de uso específicos.
+            </p>
+            <div class="charts-grid">
+        <div><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="2c1b5e35-2640-4ed2-beaf-79ed7bb4f8fa" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("2c1b5e35-2640-4ed2-beaf-79ed7bb4f8fa")) {                    Plotly.newPlot(                        "2c1b5e35-2640-4ed2-beaf-79ed7bb4f8fa",                        [{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_A\u003cbr\u003equestion_category=%{x}\u003cbr\u003efaithfulness=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_A","marker":{"color":"#8B4513","pattern":{"shape":""}},"name":"Modelo_A","offsetgroup":"Modelo_A","orientation":"v","showlegend":true,"textposition":"auto","x":["Ciencia","Geografía","Gestión de Proyectos","Literatura","Tecnología"],"xaxis":"x","y":{"dtype":"f8","bdata":"LY4HzLxw6z\u002fBsnkeVvTqP0lpNtxRweo\u002fjbQy7JTz6j+1SVnBctnqPw=="},"yaxis":"y","type":"bar"},{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_B\u003cbr\u003equestion_category=%{x}\u003cbr\u003efaithfulness=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_B","marker":{"color":"#A0522D","pattern":{"shape":""}},"name":"Modelo_B","offsetgroup":"Modelo_B","orientation":"v","showlegend":true,"textposition":"auto","x":["Ciencia","Geografía","Gestión de Proyectos","Literatura","Tecnología"],"xaxis":"x","y":{"dtype":"f8","bdata":"7VjI5ftK6T+obiZjIofpP1nvo0kiZ+k\u002f6aLvpt\u002f96D8FXIBNvFLpPw=="},"yaxis":"y","type":"bar"},{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_C_Experimental\u003cbr\u003equestion_category=%{x}\u003cbr\u003efaithfulness=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_C_Experimental","marker":{"color":"#6B8E23","pattern":{"shape":""}},"name":"Modelo_C_Experimental","offsetgroup":"Modelo_C_Experimental","orientation":"v","showlegend":true,"textposition":"auto","x":["Ciencia","Geografía","Gestión de Proyectos","Literatura","Tecnología"],"xaxis":"x","y":{"dtype":"f8","bdata":"7Y5t4qOd6z8wtrG8Xf3oP8g7iZdPbOc\u002f5K+R2rKJ6j+larti06fsPw=="},"yaxis":"y","type":"bar"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Categoría de Pregunta"}},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Faithfulness Promedio"},"range":[0,1]},"legend":{"title":{"text":"model_name"},"tracegroupgap":0},"title":{"text":"Faithfulness Promedio por Categoría","font":{"size":20}},"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div></div><div><div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="477fbe5d-1052-4c42-b9a6-0c2965b00937" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("477fbe5d-1052-4c42-b9a6-0c2965b00937")) {                    Plotly.newPlot(                        "477fbe5d-1052-4c42-b9a6-0c2965b00937",                        [{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_A\u003cbr\u003equestion_category=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_A","marker":{"color":"#8B4513","pattern":{"shape":""}},"name":"Modelo_A","offsetgroup":"Modelo_A","orientation":"v","showlegend":true,"textposition":"auto","x":["Ciencia","Geografía","Gestión de Proyectos","Literatura","Tecnología"],"xaxis":"x","y":{"dtype":"f8","bdata":"D6vLyNGW8D8PTJVA9HXwP8sz4NryHO8\u002fcU7Ry5rB7T8cVZe94A7wPw=="},"yaxis":"y","type":"bar"},{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_B\u003cbr\u003equestion_category=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_B","marker":{"color":"#A0522D","pattern":{"shape":""}},"name":"Modelo_B","offsetgroup":"Modelo_B","orientation":"v","showlegend":true,"textposition":"auto","x":["Ciencia","Geografía","Gestión de Proyectos","Literatura","Tecnología"],"xaxis":"x","y":{"dtype":"f8","bdata":"IGCU5wmw8z+hxhTfi\u002fPyP9A6lKzIafQ\u002f40StSgWE9D+ylayYDqP0Pw=="},"yaxis":"y","type":"bar"},{"alignmentgroup":"True","hovertemplate":"model_name=Modelo_C_Experimental\u003cbr\u003equestion_category=%{x}\u003cbr\u003elatency=%{y}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"Modelo_C_Experimental","marker":{"color":"#6B8E23","pattern":{"shape":""}},"name":"Modelo_C_Experimental","offsetgroup":"Modelo_C_Experimental","orientation":"v","showlegend":true,"textposition":"auto","x":["Ciencia","Geografía","Gestión de Proyectos","Literatura","Tecnología"],"xaxis":"x","y":{"dtype":"f8","bdata":"kB6XmORM7T8PHZXGVHTwP7D0DJYe6ew\u002fTeqDCx9S5z\u002f71GGtg\u002fntPw=="},"yaxis":"y","type":"bar"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{"text":"Categoría de Pregunta"}},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Latencia Promedio (s)"}},"legend":{"title":{"text":"model_name"},"tracegroupgap":0},"title":{"text":"Latencia Promedio por Categoría (s)","font":{"size":20}},"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div></div></div></div>
+    <h2>Análisis de Correlación entre Métricas</h2>
+    <div class="section">
+        <p class="metric-description">
+            Esta matriz de calor muestra la correlación de Pearson entre las diferentes métricas de evaluación.
+            Los valores cercanos a 1 o -1 indican una fuerte correlación positiva o negativa, respectivamente,
+            sugiriendo que las métricas tienden a aumentar/disminuir juntas o en direcciones opuestas.
+            Los valores cercanos a 0 indican poca o ninguna relación lineal.
+            Esto es útil para entender cómo la mejora en una métrica puede impactar en otras o identificar posibles compromisos
+            (por ejemplo, si aumentar la latencia mejora significativamente la fidelidad, o viceversa).
+        </p>
+    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.0.min.js" integrity="sha256-Ei4740bWZhaUTQuD6q9yQlgVCMPBz6CZWhevDYPv93A=" crossorigin="anonymous"></script>                <div id="c00a7d40-6661-4ab2-aad0-1364f55157dc" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("c00a7d40-6661-4ab2-aad0-1364f55157dc")) {                    Plotly.newPlot(                        "c00a7d40-6661-4ab2-aad0-1364f55157dc",                        [{"coloraxis":"coloraxis","name":"0","texttemplate":"%{z}","x":["faithfulness","answer_relevancy","context_precision","context_recall","latency","answer_tokens","simulated_satisfaction"],"y":["faithfulness","answer_relevancy","context_precision","context_recall","latency","answer_tokens","simulated_satisfaction"],"z":{"dtype":"f8","bdata":"AAAAAAAA8D8LanRUNmPAP4TYZCs5scY\u002f4bmKd63G0D+i3gCOhyTJv\u002f+9gsG7cc+\u002f7SgE7cvo0D8LanRUNmPAPwAAAAAAAPA\u002f7N5JGQoB2D+ypL2Q8WnQP97JtUwfIL4\u002fiGnBArRWwT9uPHYGhhXnP4TYZCs5scY\u002f7N5JGQoB2D8AAAAAAADwP\u002fbfeRvLctg\u002fpRa2pMj1uj9M+hOuD2KrPxp3Eka\u002fEtA\u002f4bmKd63G0D+ypL2Q8WnQP\u002fbfeRvLctg\u002fAAAAAAAA8D\u002fYI77CvlezP2VH1IBQJ66\u002fFRZGiFJ01z+i3gCOhyTJv97JtUwfIL4\u002fpRa2pMj1uj\u002fYI77CvlezPwAAAAAAAPA\u002fNwBcKEq62D++3O2V94rOP\u002f+9gsG7cc+\u002fiGnBArRWwT9M+hOuD2KrP2VH1IBQJ66\u002fNwBcKEq62D8AAAAAAADwP0V4xzHQC8M\u002f7SgE7cvo0D9uPHYGhhXnPxp3Eka\u002fEtA\u002fFRZGiFJ01z++3O2V94rOP0V4xzHQC8M\u002fAAAAAAAA8D8=","shape":"7, 7"},"type":"heatmap","xaxis":"x","yaxis":"y","hovertemplate":"x: %{x}\u003cbr\u003ey: %{y}\u003cbr\u003ecolor: %{z}\u003cextra\u003e\u003c\u002fextra\u003e"}],                        {"template":{"layout":{"font":{"size":12},"hoverlabel":{"font":{"size":10}},"title":{"font":{"size":22}}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"tickangle":-45,"title":{"text":""},"side":"top"},"yaxis":{"anchor":"x","domain":[0.0,1.0],"autorange":"reversed","title":{"text":""}},"coloraxis":{"colorscale":[[0.0,"rgb(103,0,31)"],[0.1,"rgb(178,24,43)"],[0.2,"rgb(214,96,77)"],[0.3,"rgb(244,165,130)"],[0.4,"rgb(253,219,199)"],[0.5,"rgb(247,247,247)"],[0.6,"rgb(209,229,240)"],[0.7,"rgb(146,197,222)"],[0.8,"rgb(67,147,195)"],[0.9,"rgb(33,102,172)"],[1.0,"rgb(5,48,97)"]]},"title":{"text":"Matriz de Correlación de Métricas","font":{"size":20}}},                        {"responsive": true}                    )                };            </script>        </div></div>
+    <h2>Análisis Detallado de Preguntas Individuales</h2>
+    <div class="section dataframe-table">
+        <p class="metric-description">
+            Esta tabla presenta los resultados completos de la evaluación para cada pregunta, modelo y fecha de evaluación.
+            Las entradas están ordenadas por pregunta, modelo y fecha para facilitar la comparación directa.
+            Utiliza esta sección para analizar casos específicos, identificar fallos o éxitos,
+            y profundizar en las respuestas, contextos recuperados y puntuaciones detalladas.
+            Puedes observar cómo se comportan los diferentes modelos ante la misma pregunta en distintos momentos.
+        </p>
+    <table border="1" class="dataframe dataframe-table" id="detailed_results_table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>timestamp</th>
+      <th>model_name</th>
+      <th>question_category</th>
+      <th>question</th>
+      <th>answer</th>
+      <th>ground_truth</th>
+      <th>contexts</th>
+      <th>faithfulness</th>
+      <th>answer_relevancy</th>
+      <th>context_precision</th>
+      <th>context_recall</th>
+      <th>latency</th>
+      <th>answer_tokens</th>
+      <th>simulated_satisfaction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_A</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Cuál es la capital de Francia?' en 2025-08-01.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.87</td>
+      <td>0.81</td>
+      <td>0.87</td>
+      <td>0.84</td>
+      <td>1.04s</td>
+      <td>60</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_B</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Cuál es la capital de Francia?' en 2025-08-01.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.77</td>
+      <td>0.80</td>
+      <td>0.79</td>
+      <td>0.82</td>
+      <td>1.21s</td>
+      <td>73</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Cuál es la capital de Francia?' en 2025-08-01.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.68</td>
+      <td>0.69</td>
+      <td>0.66</td>
+      <td>0.78</td>
+      <td>1.12s</td>
+      <td>48</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_A</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Cuál es la capital de Francia?' en 2025-09-01.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.81</td>
+      <td>0.80</td>
+      <td>0.81</td>
+      <td>0.88</td>
+      <td>1.16s</td>
+      <td>61</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_B</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Cuál es la capital de Francia?' en 2025-09-01.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.80</td>
+      <td>0.85</td>
+      <td>0.81</td>
+      <td>0.83</td>
+      <td>1.20s</td>
+      <td>74</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Cuál es la capital de Francia?' en 2025-09-01.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.90</td>
+      <td>0.68</td>
+      <td>0.86</td>
+      <td>0.94</td>
+      <td>1.08s</td>
+      <td>58</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_A</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Cuál es la capital de Francia?' en 2025-09-20.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.84</td>
+      <td>0.81</td>
+      <td>0.80</td>
+      <td>0.81</td>
+      <td>0.88s</td>
+      <td>70</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_B</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Cuál es la capital de Francia?' en 2025-09-20.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.83</td>
+      <td>0.84</td>
+      <td>0.82</td>
+      <td>0.85</td>
+      <td>1.14s</td>
+      <td>72</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Geografía</td>
+      <td>¿Cuál es la capital de Francia?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Cuál es la capital de Francia?' en 2025-09-20.</td>
+      <td>La capital de Francia es París.</td>
+      <td>La capital de Francia es París.</td>
+      <td>0.76</td>
+      <td>0.85</td>
+      <td>0.71</td>
+      <td>0.87</td>
+      <td>0.88s</td>
+      <td>46</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Es Python un lenguaje compilado?' en 2025-08-01.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.86</td>
+      <td>0.81</td>
+      <td>0.83</td>
+      <td>0.90</td>
+      <td>0.82s</td>
+      <td>70</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Es Python un lenguaje compilado?' en 2025-08-01.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.77</td>
+      <td>0.79</td>
+      <td>0.78</td>
+      <td>0.79</td>
+      <td>1.27s</td>
+      <td>70</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Es Python un lenguaje compilado?' en 2025-08-01.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.93</td>
+      <td>0.93</td>
+      <td>0.77</td>
+      <td>0.92</td>
+      <td>1.37s</td>
+      <td>77</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Es Python un lenguaje compilado?' en 2025-09-01.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.86</td>
+      <td>0.86</td>
+      <td>0.82</td>
+      <td>0.81</td>
+      <td>0.93s</td>
+      <td>51</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Es Python un lenguaje compilado?' en 2025-09-01.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.78</td>
+      <td>0.85</td>
+      <td>0.80</td>
+      <td>0.80</td>
+      <td>1.25s</td>
+      <td>75</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Es Python un lenguaje compilado?' en 2025-09-01.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.90</td>
+      <td>0.92</td>
+      <td>0.81</td>
+      <td>0.73</td>
+      <td>0.58s</td>
+      <td>63</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Es Python un lenguaje compilado?' en 2025-09-20.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.84</td>
+      <td>0.83</td>
+      <td>0.89</td>
+      <td>0.90</td>
+      <td>1.17s</td>
+      <td>66</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Es Python un lenguaje compilado?' en 2025-09-20.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.85</td>
+      <td>0.87</td>
+      <td>0.84</td>
+      <td>0.85</td>
+      <td>1.26s</td>
+      <td>79</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Es Python un lenguaje compilado?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Es Python un lenguaje compilado?' en 2025-09-20.</td>
+      <td>Python es un lenguaje interpretado.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general.</td>
+      <td>0.96</td>
+      <td>0.75</td>
+      <td>0.67</td>
+      <td>0.68</td>
+      <td>0.56s</td>
+      <td>52</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Quién creó Python?' en 2025-08-01.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.86</td>
+      <td>0.88</td>
+      <td>0.83</td>
+      <td>0.87</td>
+      <td>1.13s</td>
+      <td>69</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Quién creó Python?' en 2025-08-01.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.76</td>
+      <td>0.83</td>
+      <td>0.78</td>
+      <td>0.77</td>
+      <td>1.29s</td>
+      <td>78</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Quién creó Python?' en 2025-08-01.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.88</td>
+      <td>0.65</td>
+      <td>0.72</td>
+      <td>0.84</td>
+      <td>0.60s</td>
+      <td>53</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Quién creó Python?' en 2025-09-01.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.86</td>
+      <td>0.90</td>
+      <td>0.83</td>
+      <td>0.84</td>
+      <td>1.03s</td>
+      <td>58</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Quién creó Python?' en 2025-09-01.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.79</td>
+      <td>0.86</td>
+      <td>0.80</td>
+      <td>0.84</td>
+      <td>1.34s</td>
+      <td>79</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Quién creó Python?' en 2025-09-01.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.84</td>
+      <td>0.89</td>
+      <td>0.94</td>
+      <td>0.93</td>
+      <td>0.69s</td>
+      <td>54</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Quién creó Python?' en 2025-09-20.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.81</td>
+      <td>0.86</td>
+      <td>0.83</td>
+      <td>0.89</td>
+      <td>1.04s</td>
+      <td>63</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Quién creó Python?' en 2025-09-20.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.83</td>
+      <td>0.84</td>
+      <td>0.81</td>
+      <td>0.84</td>
+      <td>1.29s</td>
+      <td>75</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Quién creó Python?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Quién creó Python?' en 2025-09-20.</td>
+      <td>Python fue creado por Guido van Rossum en 1991.</td>
+      <td>Python es un lenguaje de programación interpretado, de alto nivel y de propósito general. Creado por Guido van Rossum y lanzado por primera vez en 1991.</td>
+      <td>0.95</td>
+      <td>0.75</td>
+      <td>0.88</td>
+      <td>0.95</td>
+      <td>1.32s</td>
+      <td>55</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_A</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Quién escribió 'Cien años de soledad'?' en 2025-08-01.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.88</td>
+      <td>0.89</td>
+      <td>0.87</td>
+      <td>0.82</td>
+      <td>1.03s</td>
+      <td>53</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_B</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Quién escribió 'Cien años de soledad'?' en 2025-08-01.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.72</td>
+      <td>0.78</td>
+      <td>0.83</td>
+      <td>0.79</td>
+      <td>1.39s</td>
+      <td>70</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Quién escribió 'Cien años de soledad'?' en 2025-08-01.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.86</td>
+      <td>0.82</td>
+      <td>0.71</td>
+      <td>0.90</td>
+      <td>0.56s</td>
+      <td>78</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_A</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-01.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.81</td>
+      <td>0.88</td>
+      <td>0.82</td>
+      <td>0.88</td>
+      <td>0.88s</td>
+      <td>58</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_B</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-01.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.80</td>
+      <td>0.80</td>
+      <td>0.79</td>
+      <td>0.83</td>
+      <td>1.32s</td>
+      <td>77</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-01.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.79</td>
+      <td>0.88</td>
+      <td>0.73</td>
+      <td>0.80</td>
+      <td>0.93s</td>
+      <td>73</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_A</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-20.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.83</td>
+      <td>0.87</td>
+      <td>0.89</td>
+      <td>0.85</td>
+      <td>0.88s</td>
+      <td>55</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_B</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-20.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.83</td>
+      <td>0.88</td>
+      <td>0.84</td>
+      <td>0.82</td>
+      <td>1.14s</td>
+      <td>73</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Literatura</td>
+      <td>¿Quién escribió 'Cien años de soledad'?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Quién escribió 'Cien años de soledad'?' en 2025-09-20.</td>
+      <td>Gabriel García Márquez fue el autor de 'Cien años de soledad'.</td>
+      <td>'Cien años de soledad' es una novela del escritor colombiano Gabriel García Márquez.</td>
+      <td>0.84</td>
+      <td>0.86</td>
+      <td>0.89</td>
+      <td>0.71</td>
+      <td>0.70s</td>
+      <td>79</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué base de datos vectorial es escalable?' en 2025-08-01.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.87</td>
+      <td>0.84</td>
+      <td>0.90</td>
+      <td>0.87</td>
+      <td>1.10s</td>
+      <td>52</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué base de datos vectorial es escalable?' en 2025-08-01.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.74</td>
+      <td>0.81</td>
+      <td>0.80</td>
+      <td>0.82</td>
+      <td>1.38s</td>
+      <td>77</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué base de datos vectorial es escalable?' en 2025-08-01.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.83</td>
+      <td>0.70</td>
+      <td>0.69</td>
+      <td>0.66</td>
+      <td>1.03s</td>
+      <td>47</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué base de datos vectorial es escalable?' en 2025-09-01.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.83</td>
+      <td>0.86</td>
+      <td>0.86</td>
+      <td>0.81</td>
+      <td>1.11s</td>
+      <td>56</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué base de datos vectorial es escalable?' en 2025-09-01.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.79</td>
+      <td>0.82</td>
+      <td>0.83</td>
+      <td>0.79</td>
+      <td>1.25s</td>
+      <td>80</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué base de datos vectorial es escalable?' en 2025-09-01.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.69</td>
+      <td>0.86</td>
+      <td>0.88</td>
+      <td>0.73</td>
+      <td>0.58s</td>
+      <td>57</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué base de datos vectorial es escalable?' en 2025-09-20.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.83</td>
+      <td>0.89</td>
+      <td>0.90</td>
+      <td>0.88</td>
+      <td>1.06s</td>
+      <td>68</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué base de datos vectorial es escalable?' en 2025-09-20.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.81</td>
+      <td>0.84</td>
+      <td>0.84</td>
+      <td>0.82</td>
+      <td>1.26s</td>
+      <td>76</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Qué base de datos vectorial es escalable?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué base de datos vectorial es escalable?' en 2025-09-20.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable.</td>
+      <td>Milvus es una base de datos vectorial de código abierto altamente escalable, diseñada para gestionar embeddings de aprendizaje automático.</td>
+      <td>0.96</td>
+      <td>0.85</td>
+      <td>0.86</td>
+      <td>0.89</td>
+      <td>0.91s</td>
+      <td>71</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué es un LLM?' en 2025-08-01.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.80</td>
+      <td>0.81</td>
+      <td>0.89</td>
+      <td>0.83</td>
+      <td>0.87s</td>
+      <td>53</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué es un LLM?' en 2025-08-01.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.75</td>
+      <td>0.79</td>
+      <td>0.81</td>
+      <td>0.79</td>
+      <td>1.39s</td>
+      <td>77</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué es un LLM?' en 2025-08-01.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.94</td>
+      <td>0.82</td>
+      <td>0.77</td>
+      <td>0.66</td>
+      <td>1.17s</td>
+      <td>61</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué es un LLM?' en 2025-09-01.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.81</td>
+      <td>0.88</td>
+      <td>0.84</td>
+      <td>0.88</td>
+      <td>0.94s</td>
+      <td>70</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué es un LLM?' en 2025-09-01.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.78</td>
+      <td>0.85</td>
+      <td>0.80</td>
+      <td>0.82</td>
+      <td>1.33s</td>
+      <td>73</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué es un LLM?' en 2025-09-01.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.95</td>
+      <td>0.82</td>
+      <td>0.92</td>
+      <td>0.79</td>
+      <td>1.45s</td>
+      <td>66</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_A</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué es un LLM?' en 2025-09-20.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.84</td>
+      <td>0.82</td>
+      <td>0.80</td>
+      <td>0.87</td>
+      <td>0.84s</td>
+      <td>67</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_B</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué es un LLM?' en 2025-09-20.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.86</td>
+      <td>0.84</td>
+      <td>0.81</td>
+      <td>0.83</td>
+      <td>1.17s</td>
+      <td>75</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Tecnología</td>
+      <td>¿Qué es un LLM?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué es un LLM?' en 2025-09-20.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros.</td>
+      <td>Un Large Language Model (LLM) es un modelo de lenguaje con muchos parámetros, capaz de entender y generar texto similar al humano.</td>
+      <td>0.89</td>
+      <td>0.68</td>
+      <td>0.80</td>
+      <td>0.80</td>
+      <td>0.98s</td>
+      <td>63</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_A</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué es un Sprint en Agile?' en 2025-08-01.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.84</td>
+      <td>0.80</td>
+      <td>0.82</td>
+      <td>0.88</td>
+      <td>0.80s</td>
+      <td>69</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_B</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué es un Sprint en Agile?' en 2025-08-01.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.76</td>
+      <td>0.80</td>
+      <td>0.81</td>
+      <td>0.79</td>
+      <td>1.28s</td>
+      <td>70</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué es un Sprint en Agile?' en 2025-08-01.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.71</td>
+      <td>0.78</td>
+      <td>0.93</td>
+      <td>0.72</td>
+      <td>1.08s</td>
+      <td>77</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_A</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué es un Sprint en Agile?' en 2025-09-01.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.85</td>
+      <td>0.84</td>
+      <td>0.85</td>
+      <td>0.89</td>
+      <td>1.02s</td>
+      <td>64</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_B</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué es un Sprint en Agile?' en 2025-09-01.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.80</td>
+      <td>0.85</td>
+      <td>0.83</td>
+      <td>0.81</td>
+      <td>1.28s</td>
+      <td>70</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué es un Sprint en Agile?' en 2025-09-01.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.77</td>
+      <td>0.66</td>
+      <td>0.67</td>
+      <td>0.68</td>
+      <td>0.69s</td>
+      <td>63</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_A</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué es un Sprint en Agile?' en 2025-09-20.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.82</td>
+      <td>0.85</td>
+      <td>0.86</td>
+      <td>0.89</td>
+      <td>1.10s</td>
+      <td>51</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_B</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué es un Sprint en Agile?' en 2025-09-20.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.82</td>
+      <td>0.85</td>
+      <td>0.85</td>
+      <td>0.81</td>
+      <td>1.26s</td>
+      <td>73</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Gestión de Proyectos</td>
+      <td>¿Qué es un Sprint en Agile?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué es un Sprint en Agile?' en 2025-09-20.</td>
+      <td>Un Sprint es una iteración corta en el desarrollo ágil de software.</td>
+      <td>El desarrollo ágil de software se basa en iteraciones cortas llamadas Sprints. Scrum es un marco popular para implementar Agile.</td>
+      <td>0.71</td>
+      <td>0.71</td>
+      <td>0.78</td>
+      <td>0.80</td>
+      <td>0.95s</td>
+      <td>78</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_A</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué necesita una planta para la fotosíntesis?' en 2025-08-01.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.85</td>
+      <td>0.84</td>
+      <td>0.90</td>
+      <td>0.87</td>
+      <td>1.04s</td>
+      <td>52</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_B</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué necesita una planta para la fotosíntesis?' en 2025-08-01.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.74</td>
+      <td>0.80</td>
+      <td>0.82</td>
+      <td>0.78</td>
+      <td>1.22s</td>
+      <td>71</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-08-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué necesita una planta para la fotosíntesis?' en 2025-08-01.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.83</td>
+      <td>0.85</td>
+      <td>0.70</td>
+      <td>0.84</td>
+      <td>0.99s</td>
+      <td>45</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_A</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-01.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.83</td>
+      <td>0.80</td>
+      <td>0.83</td>
+      <td>0.81</td>
+      <td>1.14s</td>
+      <td>65</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_B</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-01.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.80</td>
+      <td>0.83</td>
+      <td>0.81</td>
+      <td>0.84</td>
+      <td>1.32s</td>
+      <td>73</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-01</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-01.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.89</td>
+      <td>0.88</td>
+      <td>0.89</td>
+      <td>0.93</td>
+      <td>1.12s</td>
+      <td>53</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_A</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_A para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-20.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.90</td>
+      <td>0.85</td>
+      <td>0.85</td>
+      <td>0.82</td>
+      <td>0.92s</td>
+      <td>63</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_B</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_B para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-20.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.83</td>
+      <td>0.83</td>
+      <td>0.85</td>
+      <td>0.85</td>
+      <td>1.15s</td>
+      <td>73</td>
+      <td>✅ Satisfactorio</td>
+    </tr>
+    <tr>
+      <td>2025-09-20</td>
+      <td>Modelo_C_Experimental</td>
+      <td>Ciencia</td>
+      <td>¿Qué necesita una planta para la fotosíntesis?</td>
+      <td>Respuesta simulada de Modelo_C_Experimental para '¿Qué necesita una planta para la fotosíntesis?' en 2025-09-20.</td>
+      <td>Las plantas usan luz solar, agua y dióxido de carbono para la fotosíntesis.</td>
+      <td>La fotosíntesis es el proceso mediante el cual las plantas usan la luz solar, el agua y el dióxido de carbono para crear su propio alimento.</td>
+      <td>0.87</td>
+      <td>0.74</td>
+      <td>0.95</td>
+      <td>0.90</td>
+      <td>0.64s</td>
+      <td>64</td>
+      <td>❌ Insatisfactorio</td>
+    </tr>
+  </tbody>
+</table>
+        <script>
+            // Simple JS para hacer la tabla searchable/sortable si se desea integrar librerías como DataTables.js
+            // Por ahora, solo es una tabla HTML estática mejorada con CSS.
+        </script>
+    </div>
+    
+    </body>
+    </html>
+    

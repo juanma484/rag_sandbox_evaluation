@@ -37,6 +37,3 @@ venv/
 .cache/
 hf_home/ # Si HF_HOME apunta a una carpeta dentro del proyecto
 huggingface_models/ # Si HF_HOME apunta a una carpeta dentro del proyecto
-
-# Output generados
-output/
