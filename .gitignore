@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+# IDEs
+.vscode/
+.idea/
+
+# Editor de texto
+*~
+
+# Archivos de Jupyter/IPython (si usas notebooks)
+.ipynb_checkpoints
+
+# Entornos virtuales (generados por venv)
+venv/
+.venv/
+
+# Archivos de Pytest
+.pytest_cache/
+
+# Archivos de bases de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Archivos de configuración sensibles (¡CRÍTICO!)
+.env
+# Carpetas de caché de Hugging Face
+.cache/
+hf_home/ # Si HF_HOME apunta a una carpeta dentro del proyecto
+huggingface_models/ # Si HF_HOME apunta a una carpeta dentro del proyecto
+
+# Output generados
+output/

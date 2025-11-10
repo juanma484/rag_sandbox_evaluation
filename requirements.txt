@@ -1,0 +1,38 @@
+# /home/master/workspace/rag_sandbox_evaluation/requirements.txt
+
+# --- DEPENDENCIAS DEL FRAMEWORK DE EVALUACIÓN ---
+# Ragas y sus dependencias
+ragas
+datasets
+
+# Plotly para el dashboard
+pandas
+plotly
+
+# LangChain y relacionados (para el LLM/Embeddings del JUEZ de Ragas)
+langchain
+langchain-community
+langchain-core  
+langchain-huggingface # Para la versión más nueva de HuggingFaceEmbeddings
+
+# Hugging Face Transformers ecosystem (para el LLM/Embeddings del JUEZ de Ragas)
+transformers
+sentence-transformers
+bitsandbytes   # Para cuantificacion 4-bit en GPU (si usas un LLM juez pesado)
+accelerate     # Para device_map="auto" en GPU
+torch          # Core PyTorch library, esencial para modelos (si usas torch en el juez Ragas)
+
+# Milvus Lite (Si tu proyecto de evaluacin aún usa Milvus Lite para algo, como el RAG de demostracion anterior)
+# NOTA: Si ya NO usas Milvus Lite en tu proyecto de evaluacion (solo para el RAG externo),
+#       estas dos lineas podrian eliminarse.
+pymilvus[milvus-lite]
+
+# Utilidades
+python-dotenv  # Para cargar variables de entorno
+
+# --- INSTALACION DEL RAG EXTERNO COMO PAQUETE EDITABLE ---
+# Esta linea le dice a pip que instale el RAG externo
+# como un paquete Python, en modo "editable".
+# NOTA: La ruta debe apuntar a la carpeta raiz de tu RAG externo,
+# donde se encuentra el setup.py de ese RAG.
+-e /home/master/workspace/rag_sandbox
